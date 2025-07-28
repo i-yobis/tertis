@@ -1,6 +1,8 @@
 # tertis
 # kinda playable tetris game
 
+
+
 import pygame
 import random
 
@@ -53,11 +55,11 @@ def draw_ghost_piece(surface, piece, grid):
                 x = ghost.x + j
                 y = ghost.y + i
                 if y >= 0:
-                    pygame.draw.rect(surface, (150, 150, 150), (x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 2)
+                    pygame.draw.rect(surface, (150, 150, 150),
+                                     (x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 2)
 
 def rotate(shape):
     return [[shape[y][x] for y in range(len(shape) - 1, -1, -1)] for x in range(len(shape[0]))]
-
 
 def create_grid(locked_positions={}):
     grid = [[BLACK for _ in range(COLUMNS)] for _ in range(ROWS)]
@@ -76,7 +78,10 @@ class Piece:
         self.rotation = 0
 
     def image(self):
-        return rotate(self.shape) if self.rotation else self.shape
+        rotated_shape = self.shape
+        for _ in range(self.rotation % 4):
+            rotated_shape = rotate(rotated_shape)
+        return rotated_shape
 
 def valid_space(piece, grid):
     for i, row in enumerate(piece.image()):
@@ -90,7 +95,7 @@ def valid_space(piece, grid):
 
 def clear_rows(grid, locked):
     cleared = 0
-    for y in range(ROWS-1, -1, -1):
+    for y in range(ROWS - 1, -1, -1):
         if BLACK not in grid[y]:
             cleared += 1
             del_row = y
@@ -126,6 +131,7 @@ def get_new_piece():
 
 def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Tetris")
     clock = pygame.time.Clock()
     grid = create_grid()
     locked_positions = {}
@@ -138,44 +144,18 @@ def main():
     score = 0
     run = True
 
-    move_sideways_timer = 0
-    move_sideways_delay = 100  # milliseconds
+    lock_delay_timer = 0
+    lock_delay_limit = 500  # milliseconds
+    piece_landed = False
 
     while run:
-        grid = create_grid(locked_positions)
         dt = clock.tick(FPS)
         fall_time += dt
-        move_sideways_timer += dt
-
+        grid = create_grid(locked_positions)
         keys = pygame.key.get_pressed()
         fast_drop = keys[pygame.K_DOWN]
 
-        # Side movement (hold left/right)
-        if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
-            if move_sideways_timer > move_sideways_delay:
-                move_sideways_timer = 0
-                dx = -1 if keys[pygame.K_LEFT] else 1
-                current_piece.x += dx
-                if not valid_space(current_piece, grid):
-                    current_piece.x -= dx
-        else:
-            move_sideways_timer = move_sideways_delay + 1
-
-        current_speed = 0.05 if fast_drop else fall_speed
-        if fall_time / 1000 >= current_speed:
-            fall_time = 0
-            current_piece.y += 1
-            if not valid_space(current_piece, grid) and current_piece.y > 0:
-                current_piece.y -= 1
-                for i, row in enumerate(current_piece.image()):
-                    for j, val in enumerate(row):
-                        if val:
-                            locked_positions[(current_piece.x + j, current_piece.y + i)] = current_piece.color
-                current_piece = next_piece
-                next_piece = get_new_piece()
-                score += clear_rows(grid, locked_positions) * 100
-
-        # Process events (single key presses)
+        # Input handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -189,9 +169,9 @@ def main():
                     if not valid_space(current_piece, grid):
                         current_piece.x -= 1
                 elif event.key == pygame.K_UP:
-                    current_piece.rotation = (current_piece.rotation + 1) % 4
+                    current_piece.rotation = (current_piece.rotation - 1) % 4  # Counterclockwise
                     if not valid_space(current_piece, grid):
-                        current_piece.rotation = (current_piece.rotation - 1) % 4
+                        current_piece.rotation = (current_piece.rotation + 1) % 4
                 elif event.key == pygame.K_SPACE:
                     while valid_space(current_piece, grid):
                         current_piece.y += 1
@@ -203,7 +183,36 @@ def main():
                     current_piece = next_piece
                     next_piece = get_new_piece()
                     score += clear_rows(grid, locked_positions) * 100
+                    lock_delay_timer = 0
+                    piece_landed = False
 
+        # Automatic fall
+        current_speed = 0.05 if fast_drop else fall_speed
+        if fall_time / 1000 >= current_speed:
+            fall_time = 0
+            current_piece.y += 1
+            if not valid_space(current_piece, grid):
+                current_piece.y -= 1
+                piece_landed = True
+            else:
+                piece_landed = False
+                lock_delay_timer = 0
+
+        # Lock delay
+        if piece_landed:
+            lock_delay_timer += dt
+            if lock_delay_timer >= lock_delay_limit:
+                for i, row in enumerate(current_piece.image()):
+                    for j, val in enumerate(row):
+                        if val:
+                            locked_positions[(current_piece.x + j, current_piece.y + i)] = current_piece.color
+                current_piece = next_piece
+                next_piece = get_new_piece()
+                score += clear_rows(grid, locked_positions) * 100
+                lock_delay_timer = 0
+                piece_landed = False
+
+        # Draw piece on grid
         for i, row in enumerate(current_piece.image()):
             for j, val in enumerate(row):
                 if val:
@@ -214,7 +223,7 @@ def main():
 
         draw_window(screen, grid, score, current_piece)
 
-        # Game Over check
+        # Game Over
         if any(y < 1 for (x, y) in locked_positions):
             run = False
 
@@ -224,3 +233,6 @@ def main():
 print("Game starting...")
 if __name__ == "__main__":
     main()
+
+
+ 
