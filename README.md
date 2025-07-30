@@ -129,6 +129,51 @@ def draw_window(surface, grid, score, current_piece):
 def get_new_piece():
     return Piece(COLUMNS // 2 - 2, 0, random.choice(SHAPES))
 
+# --- Start Screen ---
+def draw_text(text, font, color, surface, x, y):
+    text_obj = font.render(text, True, color)
+    text_rect = text_obj.get_rect(center=(x, y))
+    surface.blit(text_obj, text_rect)
+
+def button(surface, text, x, y, width, height, hover_color, default_color):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()[0]
+    if x < mouse[0] < x + width and y < mouse[1] < y + height:
+        pygame.draw.rect(surface, hover_color, (x, y, width, height), border_radius=10)
+        if click:
+            return True
+    else:
+        pygame.draw.rect(surface, default_color, (x, y, width, height), border_radius=10)
+    draw_text(text, pygame.font.SysFont("comicsans", 30), BLACK, surface, x + width // 2, y + height // 2)
+    return False
+
+def start_screen():
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont("comicsans", 60, bold=True)
+    running = True
+
+    while running:
+        screen.fill(BLACK)
+        draw_text("TETRIS", font, (0, 255, 255), screen, SCREEN_WIDTH // 2, 150)
+
+        start = button(screen, "Start Game", 75, 300, 150, 50, (200, 200, 200), (128, 128, 128))
+        quit_game = button(screen, "Quit", 75, 400, 150, 50, (200, 200, 200), (128, 128, 128))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        if start:
+            return  # go to main game
+        if quit_game:
+            pygame.quit()
+            exit()
+
+        pygame.display.flip()
+        clock.tick(60)
+
 def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Tetris")
@@ -232,6 +277,7 @@ def main():
 
 print("Game starting...")
 if __name__ == "__main__":
+    start_screen()
     main()
 
 
