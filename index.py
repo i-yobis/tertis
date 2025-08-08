@@ -1,10 +1,6 @@
-# tertis
-# kinda playable tetris game
-
-
-
 import pygame
 import random
+
 
 # Initialize pygame
 pygame.init()
@@ -150,15 +146,22 @@ def button(surface, text, x, y, width, height, hover_color, default_color):
 def start_screen():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
-    font = pygame.font.SysFont("comicsans", 60, bold=True)
+    font = pygame.font.SysFont("arial", 60, bold=True)
     running = True
 
     while running:
         screen.fill(BLACK)
-        draw_text("TETRIS", font, (0, 255, 255), screen, SCREEN_WIDTH // 2, 150)
+        draw_text("T", font, (246, 23, 23), screen, SCREEN_WIDTH // 5, 150)
+        draw_text('E', font, (210,58,220), screen, SCREEN_WIDTH // 3, 150)
+        draw_text('T', font, (96,58,220), screen, SCREEN_WIDTH // 2.15, 150)
+        draw_text('R', font, (58,199,220), screen, SCREEN_WIDTH // 1.65, 150)
+        draw_text('I', font, (58,220,101), screen, SCREEN_WIDTH // 1.40, 150)
+        draw_text('S', font, (220,215,58), screen, SCREEN_WIDTH // 1.20, 150)
 
-        start = button(screen, "Start Game", 75, 300, 150, 50, (200, 200, 200), (128, 128, 128))
-        quit_game = button(screen, "Quit", 75, 400, 150, 50, (200, 200, 200), (128, 128, 128))
+
+
+        start = button(screen, "Start Game", 60, 300, 170, 50,  (0,255,0),(0,128,255))
+        quit_game = button(screen, "Quit", 75, 400, 150, 50, (255, 0, 0), (255, 128, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -279,6 +282,3 @@ print("Game starting...")
 if __name__ == "__main__":
     start_screen()
     main()
-
-
- 
